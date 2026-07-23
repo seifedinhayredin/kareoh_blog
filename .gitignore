@@ -1,0 +1,16 @@
+# Python
+blog_backend/venv/
+__pycache__/
+*.pyc
+
+# Django
+db.sqlite3
+media/
+
+# Environment variables
+.env
+.env.local
+
+# Node.js
+blog_frontend/node_modules/
+blog_frontend/.next/
