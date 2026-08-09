@@ -1,26 +1,34 @@
 # accounts/views.py
 
 from rest_framework import generics
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny,IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.views import APIView
+from rest_framework import status
+from rest_framework_simplejwt.exceptions import TokenError
+from django.middleware.csrf import get_token
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_protect
+
 
 from .models import User
 from .serializers import UserSerializer, LoginSerializer
 
-
+@method_decorator(csrf_protect, name="dispatch")
 class RegisterAPIView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
 
 
-class LoginAPIView(generics.GenericAPIView):
-    serializer_class = LoginSerializer
+@method_decorator(csrf_protect, name="dispatch")
+class LoginAPIView(APIView):
     permission_classes = [AllowAny]
 
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user = serializer.validated_data["user"]
@@ -52,3 +60,111 @@ class LoginAPIView(generics.GenericAPIView):
         )
 
         return response
+
+class MeAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+
+        return Response(serializer.data)    
+
+
+
+@method_decorator(csrf_protect, name="dispatch")
+class RefreshAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        refresh_token = request.COOKIES.get("refresh_token")
+
+        if not refresh_token:
+            return Response(
+                {"detail": "Refresh token not provided."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        serializer = TokenRefreshSerializer(
+            data={"refresh": refresh_token}
+        )
+
+        try:
+            serializer.is_valid(raise_exception=True)
+
+        except TokenError:
+            return Response(
+                {"detail": "Invalid or expired refresh token."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        access_token = serializer.validated_data["access"]
+
+        response = Response({
+            "message": "Tokens refreshed successfully."
+        })
+
+        response.set_cookie(
+            key="access_token",
+            value=access_token,
+            httponly=True,
+            secure=False,       # True in production with HTTPS
+            samesite="Lax",
+            max_age=15 * 60,
+        )
+
+        # If rotation is enabled, Simple JWT returns a new refresh token
+        if "refresh" in serializer.validated_data:
+            response.set_cookie(
+                key="refresh_token",
+                value=serializer.validated_data["refresh"],
+                httponly=True,
+                secure=False,
+                samesite="Lax",
+                max_age=7 * 24 * 60 * 60,
+            )
+
+        return response
+
+
+@method_decorator(csrf_protect, name="dispatch")
+class LogoutAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        refresh_token = request.COOKIES.get("refresh_token")
+
+        if refresh_token:
+            try:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+            except TokenError:
+                pass
+
+        response = Response({
+            "message": "Logout successful."
+        })
+
+        response.delete_cookie(
+            "access_token",
+            samesite="Lax",
+        )
+
+        response.delete_cookie(
+            "refresh_token",
+            samesite="Lax",
+        )
+
+        return response
+
+
+
+
+class CSRFTokenAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        csrf_token = get_token(request)
+
+        return Response({
+            "csrfToken": csrf_token
+        })
