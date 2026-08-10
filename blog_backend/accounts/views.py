@@ -165,6 +165,16 @@ class CSRFTokenAPIView(APIView):
     def get(self, request):
         csrf_token = get_token(request)
 
-        return Response({
+        response = Response({
             "csrfToken": csrf_token
         })
+
+        response.set_cookie(
+            key="csrftoken",
+            value=csrf_token,
+            httponly=False,
+            secure=False,
+            samesite="Lax",
+        )
+
+        return response
