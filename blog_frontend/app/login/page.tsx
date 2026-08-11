@@ -1,8 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import api from "@/lib/axios";
-import { getCsrfToken } from "@/lib/csrf";
+import { login } from "@/lib/auth";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -11,42 +10,26 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
 
     setError("");
     setLoading(true);
 
     try {
-      const csrfToken = await getCsrfToken();
-      console.log("CSRF Token:", csrfToken);
-
-      await api.post(
-        "/auth/login/",
-        {
-          username,
-          password,
-        },
-        {
-          headers: {
-            "X-CSRFToken": csrfToken,
-          },
-        }
-      );
+      await login(username, password);
 
       window.location.href = "/";
     } catch (error: any) {
       console.error(error);
 
-      if (error.response?.data) {
-        setError(
-          error.response.data.detail ||
-            error.response.data.non_field_errors?.[0] ||
-            "Login failed."
-        );
-      } else {
-        setError("Something went wrong.");
-      }
+      setError(
+        error.response?.data?.detail ||
+          error.response?.data?.non_field_errors?.[0] ||
+          "Login failed."
+      );
     } finally {
       setLoading(false);
     }
@@ -63,34 +46,46 @@ export default function LoginPage() {
         </h1>
 
         {error && (
-          <p className="rounded bg-red-100 p-3 text-red-700">
+          <div className="rounded bg-red-100 p-3 text-red-700">
             {error}
-          </p>
+          </div>
         )}
 
         <div>
-          <label className="mb-1 block">
+          <label
+            htmlFor="username"
+            className="mb-1 block"
+          >
             Username
           </label>
 
           <input
+            id="username"
             type="text"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(event) =>
+              setUsername(event.target.value)
+            }
             className="w-full rounded border p-2"
             required
           />
         </div>
 
         <div>
-          <label className="mb-1 block">
+          <label
+            htmlFor="password"
+            className="mb-1 block"
+          >
             Password
           </label>
 
           <input
+            id="password"
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(event) =>
+              setPassword(event.target.value)
+            }
             className="w-full rounded border p-2"
             required
           />
