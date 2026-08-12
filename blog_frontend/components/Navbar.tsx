@@ -37,42 +37,49 @@ export default function Navbar() {
               Loading...
             </span>
           ) : user ? (
-            <>
-              <Link
-                href="/dashboard"
-                className="hover:text-blue-600"
-              >
-                Dashboard
-              </Link>
+  <>
+    <Link
+      href="/dashboard"
+      className="hover:text-blue-600"
+    >
+      Dashboard
+    </Link>
 
-              <span className="text-gray-600">
-                Hi, {user.username}
-              </span>
+    <Link
+      href="/posts/create"
+      className="hover:text-blue-600"
+    >
+      Create Post
+    </Link>
 
-              <button
-                onClick={logout}
-                className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700"
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <Link
-                href="/login"
-                className="rounded border px-4 py-2 hover:bg-gray-100"
-              >
-                Login
-              </Link>
+    <span className="text-gray-600">
+      Hi, {user.username}
+    </span>
 
-              <Link
-                href="/register"
-                className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-              >
-                Register
-              </Link>
-            </>
-          )}
+    <button
+      onClick={logout}
+      className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+    >
+      Logout
+    </button>
+  </>
+) : (
+  <>
+    <Link
+      href="/login"
+      className="rounded border px-4 py-2 hover:bg-gray-100"
+    >
+      Login
+    </Link>
+
+    <Link
+      href="/register"
+      className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+    >
+      Register
+    </Link>
+  </>
+)}
 
         </div>
       </div>

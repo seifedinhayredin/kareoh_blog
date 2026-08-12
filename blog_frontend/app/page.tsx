@@ -1,57 +1,92 @@
 "use client";
 
-import { useAuth } from "@/components/AuthProvider";
+import { useEffect, useState } from "react";
+
+import { getPosts } from "@/lib/posts";
+import { Post } from "@/types/post";
 
 export default function HomePage() {
-  const {
-    user,
-    loading,
-    logout,
-  } = useAuth();
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function loadPosts() {
+      try {
+        const data = await getPosts();
+
+        setPosts(data);
+      } catch (error) {
+        console.error(error);
+
+        setError(
+          "Failed to load posts."
+        );
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadPosts();
+  }, []);
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center">
-        <p>Loading...</p>
+      <main className="p-10">
+        <p>Loading posts...</p>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="p-10">
+        <p className="text-red-600">
+          {error}
+        </p>
       </main>
     );
   }
 
   return (
-    <main className="p-10">
-      {user ? (
-        <div className="space-y-4">
-          <h1 className="text-2xl font-bold">
-            Welcome, {user.username}!
-          </h1>
+    <main className="mx-auto max-w-5xl p-10">
 
-          <p>
-            Email: {user.email}
-          </p>
+      <h1 className="mb-8 text-3xl font-bold">
+        Blog Posts
+      </h1>
 
-          <p>
-            Name: {user.first_name}{" "}
-            {user.last_name}
-          </p>
-
-          <button
-            onClick={logout}
-            className="rounded bg-red-600 px-4 py-2 text-white"
-          >
-            Logout
-          </button>
-        </div>
+      {posts.length === 0 ? (
+        <p>
+          No posts available.
+        </p>
       ) : (
-        <div>
-          <h1 className="text-2xl font-bold">
-            Welcome to the Blog
-          </h1>
+        <div className="space-y-6">
 
-          <p className="mt-2">
-            You are not logged in.
-          </p>
+          {posts.map((post) => (
+            <article
+              key={post.id}
+              className="rounded-lg border p-6 shadow-sm"
+            >
+              <h2 className="text-2xl font-semibold">
+                {post.title}
+              </h2>
+
+              <p className="mt-3 text-gray-700">
+                {post.body}
+              </p>
+
+              <div className="mt-4 text-sm text-gray-500">
+                Created:{" "}
+                {new Date(
+                  post.created
+                ).toLocaleDateString()}
+              </div>
+            </article>
+          ))}
+
         </div>
       )}
+
     </main>
   );
 }
