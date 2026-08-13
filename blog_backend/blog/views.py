@@ -1,8 +1,9 @@
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.viewsets import ModelViewSet
 
 from .models import Post
 from .serializers import PostSerializer
+from .permissions import IsAuthorOrReadOnly
+from .utils import generate_unique_slug
 
 
 class PostViewSet(ModelViewSet):
@@ -12,17 +13,21 @@ class PostViewSet(ModelViewSet):
     serializer_class = PostSerializer
 
     permission_classes = [
-        IsAuthenticatedOrReadOnly
+        IsAuthorOrReadOnly
     ]
 
     lookup_field = "slug"
 
     def perform_create(self, serializer):
-        from django.utils.text import slugify
 
         title = serializer.validated_data["title"]
 
+        slug = generate_unique_slug(
+            Post,
+            title
+        )
+
         serializer.save(
             author=self.request.user,
-            slug=slugify(title),
+            slug=slug
         )
