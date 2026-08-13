@@ -64,7 +64,7 @@ export async function updatePost(
 ): Promise<Post> {
   const csrfToken = await getCsrfToken();
 
-  const response = await api.put<Post>(
+  const response = await api.patch<Post>(
     `/blog/posts/${slug}/`,
     data,
     {
@@ -94,4 +94,16 @@ export async function deletePost(
       },
     }
   );
+}
+
+// =========================
+// GET MY POSTS
+// =========================
+
+export async function getMyPosts(): Promise<Post[]> {
+  const response = await api.get<Post[]>(
+    "/blog/posts/mine/"
+  );
+
+  return response.data;
 }
