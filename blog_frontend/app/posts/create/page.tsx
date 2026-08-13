@@ -12,9 +12,11 @@ export default function CreatePostPage() {
 
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [status, setStatus] = useState<"DR" | "PB">("DR");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
 
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>
@@ -39,6 +41,7 @@ export default function CreatePostPage() {
       const post = await createPost({
         title,
         body,
+        status,
       });
 
       console.log("Created post:", post);
@@ -143,6 +146,42 @@ export default function CreatePostPage() {
               disabled={loading}
             />
           </div>
+
+          <div>
+  <label className="mb-3 block font-medium">
+    Status
+  </label>
+
+  <div className="flex gap-6">
+
+    <label className="flex items-center gap-2">
+      <input
+        type="radio"
+        name="status"
+        value="DR"
+        checked={status === "DR"}
+        onChange={() => setStatus("DR")}
+        disabled={loading}
+      />
+
+      Draft
+    </label>
+
+    <label className="flex items-center gap-2">
+      <input
+        type="radio"
+        name="status"
+        value="PB"
+        checked={status === "PB"}
+        onChange={() => setStatus("PB")}
+        disabled={loading}
+      />
+
+      Published
+    </label>
+
+  </div>
+</div>
 
           {/* Buttons */}
           <div className="flex gap-4">

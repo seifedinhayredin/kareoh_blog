@@ -71,7 +71,7 @@ export default function HomePage() {
               href={`/posts/${post.slug}`}
               className="text-2xl font-semibold hover:text-blue-600"
             >
-              {post.title}
+              {post.title} {post.status}
             </Link>
 
             <p className="mt-3 text-gray-700">

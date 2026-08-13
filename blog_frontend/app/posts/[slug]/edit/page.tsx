@@ -34,6 +34,7 @@ export default function EditPostPage() {
 
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [status, setStatus] = useState<"DR" | "PB">("DR");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -54,6 +55,7 @@ export default function EditPostPage() {
 
         setTitle(data.title);
         setBody(data.body);
+        setStatus(data.status);
 
       } catch (error) {
         console.error(error);
@@ -98,6 +100,7 @@ export default function EditPostPage() {
       await updatePost(slug, {
         title,
         body,
+        status,
       });
 
       // Go back to post detail
@@ -169,7 +172,7 @@ export default function EditPostPage() {
   // =========================
   // ERROR
   // =========================
-  
+
 if (
   post &&
   user &&
@@ -268,6 +271,41 @@ if (
               className="w-full resize-y rounded-md border p-3 outline-none focus:border-blue-500"
             />
           </div>
+          <div>
+  <label className="mb-3 block font-medium">
+    Status
+  </label>
+
+  <div className="flex gap-6">
+
+    <label className="flex items-center gap-2">
+      <input
+        type="radio"
+        name="status"
+        value="DR"
+        checked={status === "DR"}
+        onChange={() => setStatus("DR")}
+        disabled={saving}
+      />
+
+      Draft
+    </label>
+
+    <label className="flex items-center gap-2">
+      <input
+        type="radio"
+        name="status"
+        value="PB"
+        checked={status === "PB"}
+        onChange={() => setStatus("PB")}
+        disabled={saving}
+      />
+
+      Published
+    </label>
+
+  </div>
+</div>
 
           {/* BUTTONS */}
 

@@ -13,4 +13,5 @@ export interface Post {
 export interface CreatePostData {
   title: string;
   body: string;
+  status: "DR" | "PB";
 }
