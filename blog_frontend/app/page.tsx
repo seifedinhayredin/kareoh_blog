@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
+import Link from "next/link";
 import { getPosts } from "@/lib/posts";
 import { Post } from "@/types/post";
 
@@ -64,24 +64,27 @@ export default function HomePage() {
 
           {posts.map((post) => (
             <article
-              key={post.id}
-              className="rounded-lg border p-6 shadow-sm"
+            key={post.id}
+            className="rounded-lg border p-6 shadow-sm"
+          >
+            <Link
+              href={`/posts/${post.slug}`}
+              className="text-2xl font-semibold hover:text-blue-600"
             >
-              <h2 className="text-2xl font-semibold">
-                {post.title}
-              </h2>
+              {post.title}
+            </Link>
 
-              <p className="mt-3 text-gray-700">
-                {post.body}
-              </p>
+            <p className="mt-3 text-gray-700">
+              {post.body}
+            </p>
 
-              <div className="mt-4 text-sm text-gray-500">
-                Created:{" "}
-                {new Date(
-                  post.created
-                ).toLocaleDateString()}
-              </div>
-            </article>
+            <div className="mt-4 text-sm text-gray-500">
+              Published:{" "}
+              {new Date(
+                post.publish
+              ).toLocaleDateString()}
+            </div>
+          </article>
           ))}
 
         </div>

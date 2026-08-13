@@ -23,10 +23,10 @@ export async function getPosts(): Promise<Post[]> {
 // =========================
 
 export async function getPost(
-  id: number
+  slug: string
 ): Promise<Post> {
   const response = await api.get<Post>(
-    `/blog/posts/${id}/`
+    `/blog/posts/${slug}/`
   );
 
   return response.data;
@@ -59,13 +59,13 @@ export async function createPost(
 // =========================
 
 export async function updatePost(
-  id: number,
+  slug: string,
   data: CreatePostData
 ): Promise<Post> {
   const csrfToken = await getCsrfToken();
 
   const response = await api.put<Post>(
-    `/blog/posts/${id}/`,
+    `/blog/posts/${slug}/`,
     data,
     {
       headers: {
@@ -82,12 +82,12 @@ export async function updatePost(
 // =========================
 
 export async function deletePost(
-  id: number
+  slug: string
 ): Promise<void> {
   const csrfToken = await getCsrfToken();
 
   await api.delete(
-    `/blog/posts/${id}/`,
+    `/blog/posts/${slug}/`,
     {
       headers: {
         "X-CSRFToken": csrfToken,
