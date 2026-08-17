@@ -11,6 +11,17 @@ import {
   useRouter,
 } from "next/navigation";
 
+import {
+  AlertCircle,
+  ArrowLeft,
+  Edit3,
+  FileText,
+  Loader2,
+  Save,
+  Send,
+  X,
+} from "lucide-react";
+
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/components/AuthProvider";
 
@@ -23,14 +34,11 @@ import { Post } from "@/types/post";
 
 export default function EditPostPage() {
   const params = useParams();
-
   const router = useRouter();
 
   const slug = params.slug as string;
 
-  const [post, setPost] = useState<Post | null>(
-    null
-  );
+  const [post, setPost] = useState<Post | null>(null);
 
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -40,6 +48,7 @@ export default function EditPostPage() {
   const [saving, setSaving] = useState(false);
 
   const [error, setError] = useState("");
+
   const { user } = useAuth();
 
   // =========================
@@ -56,13 +65,10 @@ export default function EditPostPage() {
         setTitle(data.title);
         setBody(data.body);
         setStatus(data.status);
-
       } catch (error) {
         console.error(error);
 
-        setError(
-          "Failed to load the post."
-        );
+        setError("Failed to load the post.");
       } finally {
         setLoading(false);
       }
@@ -103,12 +109,8 @@ export default function EditPostPage() {
         status,
       });
 
-      // Go back to post detail
       router.push(`/posts/${slug}`);
-
-      // Refresh the page data
       router.refresh();
-
     } catch (error: any) {
       console.error(error);
 
@@ -137,9 +139,7 @@ export default function EditPostPage() {
             }
           );
 
-          setError(
-            messages.join(" | ")
-          );
+          setError(messages.join(" | "));
         } else {
           setError(
             "Failed to update post."
@@ -162,39 +162,117 @@ export default function EditPostPage() {
   if (loading) {
     return (
       <ProtectedRoute>
-        <main className="mx-auto max-w-3xl p-10">
-          <p>Loading post...</p>
+        <main className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+          <div className="mx-auto max-w-4xl">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+
+              <div className="flex items-center gap-3">
+                <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+
+                <div>
+                  <h1 className="text-lg font-semibold text-slate-900">
+                    Loading post
+                  </h1>
+
+                  <p className="mt-1 text-sm text-slate-500">
+                    Please wait while we load your post.
+                  </p>
+                </div>
+              </div>
+
+              {/* Skeleton */}
+              <div className="mt-8 space-y-6">
+                <div>
+                  <div className="mb-2 h-4 w-20 animate-pulse rounded bg-slate-200" />
+                  <div className="h-12 w-full animate-pulse rounded-lg bg-slate-200" />
+                </div>
+
+                <div>
+                  <div className="mb-2 h-4 w-20 animate-pulse rounded bg-slate-200" />
+
+                  <div className="h-80 w-full animate-pulse rounded-lg bg-slate-200" />
+                </div>
+              </div>
+            </div>
+          </div>
         </main>
       </ProtectedRoute>
     );
   }
 
   // =========================
-  // ERROR
+  // OWNERSHIP ERROR
   // =========================
 
-if (
-  post &&
-  user &&
-  post.author.id !== user.id
-) {
-  return (
-    <ProtectedRoute>
-      <main className="mx-auto max-w-3xl p-10">
-        <div className="rounded-md bg-red-100 p-4 text-red-700">
-          You do not have permission to edit this post.
-        </div>
-      </main>
-    </ProtectedRoute>
-  );
-}
+  if (
+    post &&
+    user &&
+    post.author.id !== user.id
+  ) {
+    return (
+      <ProtectedRoute>
+        <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-8">
+          <div className="w-full max-w-md rounded-2xl border border-red-200 bg-white p-6 text-center shadow-sm sm:p-8">
+
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-100">
+              <AlertCircle className="h-7 w-7 text-red-600" />
+            </div>
+
+            <h1 className="mt-5 text-xl font-bold text-slate-900">
+              Access denied
+            </h1>
+
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              You do not have permission to edit this post.
+              Only the author can make changes.
+            </p>
+
+            <button
+              type="button"
+              onClick={() =>
+                router.push(`/posts/${slug}`)
+              }
+              className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Post
+            </button>
+          </div>
+        </main>
+      </ProtectedRoute>
+    );
+  }
+
+  // =========================
+  // LOAD ERROR
+  // =========================
 
   if (error && !post) {
     return (
       <ProtectedRoute>
-        <main className="mx-auto max-w-3xl p-10">
-          <div className="rounded-md bg-red-100 p-4 text-red-700">
-            {error}
+        <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-8">
+          <div className="w-full max-w-md rounded-2xl border border-red-200 bg-white p-6 text-center shadow-sm sm:p-8">
+
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-100">
+              <AlertCircle className="h-7 w-7 text-red-600" />
+            </div>
+
+            <h1 className="mt-5 text-xl font-bold text-slate-900">
+              Unable to load post
+            </h1>
+
+            <p className="mt-2 break-words text-sm leading-6 text-red-600">
+              {error}
+            </p>
+
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-slate-300 px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Go Back
+            </button>
           </div>
         </main>
       </ProtectedRoute>
@@ -207,137 +285,236 @@ if (
 
   return (
     <ProtectedRoute>
-      <main className="mx-auto max-w-3xl p-10">
+      <main className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+        <div className="mx-auto max-w-4xl">
 
-        <h1 className="mb-8 text-3xl font-bold">
-          Edit Post
-        </h1>
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-100">
+                <Edit3 className="h-6 w-6 text-blue-600" />
+              </div>
 
-        {error && (
-          <div className="mb-6 rounded-md bg-red-100 p-4 text-red-700">
-            {error}
-          </div>
-        )}
+              <div className="min-w-0">
+                <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                  Edit Post
+                </h1>
 
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-6"
-        >
-
-          {/* TITLE */}
-
-          <div>
-            <label
-              htmlFor="title"
-              className="mb-2 block font-medium"
-            >
-              Title
-            </label>
-
-            <input
-              id="title"
-              type="text"
-              value={title}
-              onChange={(event) =>
-                setTitle(
-                  event.target.value
-                )
-              }
-              disabled={saving}
-              className="w-full rounded-md border p-3 outline-none focus:border-blue-500"
-            />
+                <p className="mt-1 text-sm text-slate-500 sm:text-base">
+                  Update your article and keep your readers
+                  informed.
+                </p>
+              </div>
+            </div>
           </div>
 
-          {/* BODY */}
+          {/* Editor Card */}
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
 
-          <div>
-            <label
-              htmlFor="body"
-              className="mb-2 block font-medium"
+            {/* Error */}
+            {error && (
+              <div className="mx-5 mt-5 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 sm:mx-6">
+                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+
+                <p className="break-words">
+                  {error}
+                </p>
+              </div>
+            )}
+
+            <form
+              onSubmit={handleSubmit}
+              className="p-5 sm:p-6 lg:p-8"
             >
-              Content
-            </label>
+              {/* Title */}
+              <div>
+                <label
+                  htmlFor="title"
+                  className="mb-2 block text-sm font-semibold text-slate-700"
+                >
+                  Post Title
+                </label>
 
-            <textarea
-              id="body"
-              value={body}
-              onChange={(event) =>
-                setBody(
-                  event.target.value
-                )
-              }
-              disabled={saving}
-              rows={15}
-              className="w-full resize-y rounded-md border p-3 outline-none focus:border-blue-500"
-            />
+                <input
+                  id="title"
+                  type="text"
+                  value={title}
+                  onChange={(event) =>
+                    setTitle(event.target.value)
+                  }
+                  disabled={saving}
+                  placeholder="Enter post title..."
+                  className="h-12 w-full rounded-lg border border-slate-300 bg-white px-4 text-base font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-50"
+                />
+              </div>
+
+              {/* Content */}
+              <div className="mt-6">
+                <div className="mb-2 flex items-center justify-between gap-4">
+                  <label
+                    htmlFor="body"
+                    className="block text-sm font-semibold text-slate-700"
+                  >
+                    Content
+                  </label>
+
+                  <span className="shrink-0 text-xs text-slate-400">
+                    {body.length.toLocaleString()} characters
+                  </span>
+                </div>
+
+                <textarea
+                  id="body"
+                  value={body}
+                  onChange={(event) =>
+                    setBody(event.target.value)
+                  }
+                  disabled={saving}
+                  rows={18}
+                  placeholder="Write your post here..."
+                  className="min-h-[320px] w-full resize-y rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm leading-7 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-50 sm:min-h-[420px] sm:text-base"
+                />
+
+                <p className="mt-2 text-xs text-slate-400">
+                  Make your changes and save when you're ready.
+                </p>
+              </div>
+
+              {/* Status */}
+              <div className="mt-7">
+                <fieldset>
+                  <legend className="mb-3 text-sm font-semibold text-slate-700">
+                    Publication Status
+                  </legend>
+
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+
+                    {/* Draft */}
+                    <label
+                      className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition ${
+                        status === "DR"
+                          ? "border-blue-500 bg-blue-50 ring-2 ring-blue-100"
+                          : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="status"
+                        value="DR"
+                        checked={status === "DR"}
+                        onChange={() =>
+                          setStatus("DR")
+                        }
+                        disabled={saving}
+                        className="mt-1 h-4 w-4 accent-blue-600"
+                      />
+
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">
+                          Draft
+                        </p>
+
+                        <p className="mt-1 text-xs leading-5 text-slate-500">
+                          Keep the post private while you
+                          continue editing.
+                        </p>
+                      </div>
+                    </label>
+
+                    {/* Published */}
+                    <label
+                      className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition ${
+                        status === "PB"
+                          ? "border-blue-500 bg-blue-50 ring-2 ring-blue-100"
+                          : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="status"
+                        value="PB"
+                        checked={status === "PB"}
+                        onChange={() =>
+                          setStatus("PB")
+                        }
+                        disabled={saving}
+                        className="mt-1 h-4 w-4 accent-blue-600"
+                      />
+
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">
+                          Published
+                        </p>
+
+                        <p className="mt-1 text-xs leading-5 text-slate-500">
+                          Make the updated post visible to
+                          readers.
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                </fieldset>
+              </div>
+
+              {/* Actions */}
+              <div className="mt-8 flex flex-col-reverse gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:justify-between">
+
+                {/* Back */}
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={() =>
+                    router.push(
+                      `/posts/${slug}`
+                    )
+                  }
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-slate-300 px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Cancel
+                </button>
+
+                {/* Save */}
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Saving...
+                    </>
+                  ) : status === "PB" ? (
+                    <>
+                      <Send className="h-4 w-4" />
+                      Save & Publish
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" />
+                      Save Draft
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
-          <div>
-  <label className="mb-3 block font-medium">
-    Status
-  </label>
 
-  <div className="flex gap-6">
-
-    <label className="flex items-center gap-2">
-      <input
-        type="radio"
-        name="status"
-        value="DR"
-        checked={status === "DR"}
-        onChange={() => setStatus("DR")}
-        disabled={saving}
-      />
-
-      Draft
-    </label>
-
-    <label className="flex items-center gap-2">
-      <input
-        type="radio"
-        name="status"
-        value="PB"
-        checked={status === "PB"}
-        onChange={() => setStatus("PB")}
-        disabled={saving}
-      />
-
-      Published
-    </label>
-
-  </div>
-</div>
-
-          {/* BUTTONS */}
-
-          <div className="flex gap-4">
-
-            <button
-              type="submit"
-              disabled={saving}
-              className="rounded-md bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {saving
-                ? "Saving..."
-                : "Save Changes"}
-            </button>
-
+          {/* Bottom navigation */}
+          <div className="mt-5">
             <button
               type="button"
-              disabled={saving}
               onClick={() =>
-                router.push(
-                  `/posts/${slug}`
-                )
+                router.push(`/posts/${slug}`)
               }
-              className="rounded-md border px-6 py-3 font-medium hover:bg-gray-100"
+              className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-blue-600"
             >
-              Cancel
+              <ArrowLeft className="h-4 w-4" />
+              Return to post
             </button>
-
           </div>
-
-        </form>
-
+        </div>
       </main>
     </ProtectedRoute>
   );

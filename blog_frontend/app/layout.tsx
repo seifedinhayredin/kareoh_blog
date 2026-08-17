@@ -16,11 +16,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
+      <body className="min-h-screen bg-slate-50 text-slate-900 antialiased">
         <AuthProvider>
           <Navbar />
 
-          {children}
+          <main className="min-h-[calc(100vh-4rem)]">
+            {children}
+          </main>
         </AuthProvider>
       </body>
     </html>
