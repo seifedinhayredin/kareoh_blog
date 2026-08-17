@@ -21,6 +21,7 @@ import {
 } from "@/lib/posts";
 
 import { Post } from "@/types/post";
+import Comments from "@/components/Comments";
 
 
 export default function PostDetailPage() {
@@ -255,7 +256,7 @@ export default function PostDetailPage() {
   // =========================
 
   const isOwner =
-    user?.id === post.author;
+    user?.id === post.author.id;
 
 
   // =========================
@@ -301,6 +302,13 @@ export default function PostDetailPage() {
               : "Draft"}
 
           </span>
+          <div className="text-sm text-gray-500">
+            By{" "}
+            <span className="font-medium text-gray-700">
+              {post.author.first_name}{" "}
+              {post.author.last_name}
+            </span>
+          </div>
 
         </div>
 
@@ -367,9 +375,15 @@ export default function PostDetailPage() {
 
         </article>
 
+        <Comments
+        slug={post.slug}
+        userId={user?.id}
+      />
+
       </main>
 
     </ProtectedRoute>
 
   );
 }
+

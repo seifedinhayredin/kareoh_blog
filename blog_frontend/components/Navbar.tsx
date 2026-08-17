@@ -19,7 +19,7 @@ export default function Navbar() {
           href="/"
           className="text-xl font-bold"
         >
-          My Blog
+          Kaeroh Blog
         </Link>
 
         {/* Navigation */}

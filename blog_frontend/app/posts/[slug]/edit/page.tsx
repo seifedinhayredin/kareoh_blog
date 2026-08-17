@@ -176,7 +176,7 @@ export default function EditPostPage() {
 if (
   post &&
   user &&
-  post.author !== user.id
+  post.author.id !== user.id
 ) {
   return (
     <ProtectedRoute>

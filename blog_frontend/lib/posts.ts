@@ -4,6 +4,7 @@ import { getCsrfToken } from "./csrf";
 import {
   Post,
   CreatePostData,
+  Comment,
 } from "@/types/post";
 
 // =========================
@@ -106,4 +107,80 @@ export async function getMyPosts(): Promise<Post[]> {
   );
 
   return response.data;
+}
+
+// =========================
+// GET COMMENTS
+// =========================
+
+export async function getComments(
+  slug: string
+): Promise<Comment[]> {
+
+  const response = await api.get<Comment[]>(
+    `/blog/posts/${slug}/comments/`
+  );
+
+  return response.data;
+}
+
+// =========================
+// CREATE COMMENT
+// =========================
+
+export async function createComment(
+  slug: string,
+  body: string
+): Promise<Comment> {
+
+  const csrfToken = await getCsrfToken();
+
+  const response = await api.post<Comment>(
+    `/blog/posts/${slug}/comments/`,
+    {
+      body,
+    },
+     {
+      headers: {
+        "X-CSRFToken": csrfToken,
+      },
+    }
+  );
+
+  return response.data;
+}
+
+// =========================
+// UPDATE COMMENT
+// =========================
+
+export async function updateComment(
+  slug: string,
+  commentId: number,
+  body: string
+): Promise<Comment> {
+
+  const response = await api.patch<Comment>(
+    `/blog/posts/${slug}/comments/${commentId}/`,
+    {
+      body,
+    }
+  );
+
+  return response.data;
+}
+
+
+// =========================
+// DELETE COMMENT
+// =========================
+
+export async function deleteComment(
+  slug: string,
+  commentId: number
+): Promise<void> {
+
+  await api.delete(
+    `/blog/posts/${slug}/comments/${commentId}/`
+  );
 }

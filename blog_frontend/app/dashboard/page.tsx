@@ -295,11 +295,13 @@ export default function DashboardPage() {
                 <div className="flex flex-wrap gap-2">
 
                   <Link
-                    href={`/posts/${post.slug}`}
-                    className="rounded border px-3 py-1.5 text-sm hover:bg-gray-50"
-                  >
-                    View
-                  </Link>
+                        href={`/posts/${post.slug}`}
+                        className="rounded border px-3 py-1.5 text-sm hover:bg-gray-50"
+                      >
+                        {post.status === "PB"
+                          ? "View"
+                          : "Preview"}
+                      </Link>
 
 
                   <Link

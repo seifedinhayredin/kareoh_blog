@@ -1,8 +1,13 @@
+export interface Author {
+  id: number;
+  first_name: string;
+  last_name: string;
+}
 export interface Post {
   id: number;
   title: string;
   slug: string;
-  author: number;
+  author: Author;
   body: string;
   publish: string;
   created: string;
@@ -14,4 +19,20 @@ export interface CreatePostData {
   title: string;
   body: string;
   status: "DR" | "PB";
+}
+
+export interface CommentAuthor {
+  id: number;
+  first_name: string;
+  last_name: string;
+}
+
+export interface Comment {
+  id: number;
+  post: number;
+  author: CommentAuthor;
+  body: string;
+  created: string;
+  updated: string;
+  active: boolean;
 }
