@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 
-from .models import Post, Comment
+from .models import Post, Comment,Like
 
 
 User = get_user_model()
@@ -26,6 +26,13 @@ class PostSerializer(serializers.ModelSerializer):
         read_only=True
     )
 
+    like_count = serializers.IntegerField(
+        source="likes.count",
+        read_only=True
+    )
+
+    is_liked = serializers.SerializerMethodField()
+
     class Meta:
         model = Post
 
@@ -39,6 +46,8 @@ class PostSerializer(serializers.ModelSerializer):
             "created",
             "updated",
             "status",
+            "like_count",
+            "is_liked",
         ]
 
         read_only_fields = [
@@ -47,7 +56,26 @@ class PostSerializer(serializers.ModelSerializer):
             "author",
             "created",
             "updated",
+            "like_count",
+            "is_liked",
         ]
+
+    def get_is_liked(self, obj):
+
+        request = self.context.get(
+            "request"
+        )
+
+        if not request:
+            return False
+
+        if not request.user.is_authenticated:
+            return False
+
+        return Like.objects.filter(
+            post=obj,
+            user=request.user
+        ).exists()
 
 class CommentSerializer(serializers.ModelSerializer):
 

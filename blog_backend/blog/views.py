@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from django.shortcuts import get_object_or_404
 
-from .models import Post, Comment
+from .models import Post, Comment, Like
 from .utils import generate_unique_slug
 
 from .permissions import (
@@ -214,3 +214,59 @@ class PostViewSet(ModelViewSet):
             return Response(
                 status=204
             )
+
+    #For like button
+    @action(
+    detail=True,
+    methods=["post", "delete"],
+    url_path="like",
+    permission_classes=[IsAuthenticated],
+    )
+    def like(
+        self,
+        request,
+        slug=None
+    ):
+
+        post = self.get_object()
+
+    # =========================
+    # LIKE
+    # =========================
+
+        if request.method == "POST":
+
+            like, created = Like.objects.get_or_create(
+                post=post,
+                user=request.user
+            )
+
+            return Response(
+                {
+                    "liked": True,
+                    "created": created,
+                    "like_count": Like.objects.filter(
+                        post=post
+                    ).count(),
+                },
+                status=200
+            )
+
+    # =========================
+    # UNLIKE
+    # =========================
+
+        deleted, _ = Like.objects.filter(
+            post=post,
+            user=request.user
+        ).delete()
+
+        return Response(
+            {
+                "liked": False,
+                "like_count": Like.objects.filter(
+                    post=post
+                ).count(),
+            },
+            status=200
+        )
