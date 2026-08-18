@@ -184,3 +184,33 @@ export async function deleteComment(
     `/blog/posts/${slug}/comments/${commentId}/`
   );
 }
+
+// =========================
+// LIKE POST
+// =========================
+
+export async function likePost(
+  slug: string
+) {
+
+  const response = await api.post(
+    `/blog/posts/${slug}/like/`
+  );
+
+  return response.data;
+}
+
+// =========================
+// UNLIKE POST
+// =========================
+
+export async function unlikePost(
+  slug: string
+) {
+
+  const response = await api.delete(
+    `/blog/posts/${slug}/like/`
+  );
+
+  return response.data;
+}

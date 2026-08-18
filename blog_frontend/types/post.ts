@@ -13,6 +13,9 @@ export interface Post {
   created: string;
   updated: string;
   status: "DR" | "PB";
+
+   like_count: number;
+  is_liked: boolean;
 }
 
 export interface CreatePostData {

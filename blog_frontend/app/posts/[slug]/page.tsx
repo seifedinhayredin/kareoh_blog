@@ -32,6 +32,7 @@ import {
 
 import { Post } from "@/types/post";
 import Comments from "@/components/Comments";
+import LikeButton from "@/components/LikeButton";
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -399,6 +400,13 @@ export default function PostDetailPage() {
 
             </div>
           </div>
+
+          <LikeButton
+          slug={post.slug}
+          initialLikeCount={post.like_count}
+          initialIsLiked={post.is_liked}
+          isAuthenticated={!!user}
+        />
         </article>
 
         {/* Comments */}
