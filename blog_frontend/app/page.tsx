@@ -12,12 +12,13 @@ import {
 
 import { getPosts } from "@/lib/posts";
 import { Post } from "@/types/post";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function HomePage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
+   const {user} = useAuth();
   useEffect(() => {
     async function loadPosts() {
       try {
@@ -184,6 +185,7 @@ export default function HomePage() {
                   </div>
 
                   {/* Read more */}
+              {user?.id ? 
                   <Link
                     href={`/posts/${post.slug}`}
                     className="inline-flex w-fit items-center gap-1.5 font-medium text-blue-600 transition hover:text-blue-700"
@@ -191,6 +193,15 @@ export default function HomePage() {
                     Read more
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                   </Link>
+                  :
+                  <Link
+                    href={`/login`}
+                    className="inline-flex w-fit items-center gap-1.5 font-medium text-blue-600 transition hover:text-blue-700"
+                  >
+                    Login to read more
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  </Link>
+            }
                 </div>
               </article>
             ))}

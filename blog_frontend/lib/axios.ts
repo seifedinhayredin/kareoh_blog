@@ -34,6 +34,29 @@ function processQueue(error: unknown = null) {
   failedQueue = [];
 }
 
+//let isRefreshing = false;
+let isRedirectingToLogin = false;
+
+const redirectToLogin = () => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  // Prevent repeated redirects
+  if (isRedirectingToLogin) {
+    return;
+  }
+
+  // Don't redirect if already on login
+  if (window.location.pathname === "/login") {
+    return;
+  }
+
+  isRedirectingToLogin = true;
+
+  window.location.replace("/login");
+};
+
 api.interceptors.response.use(
   (response) => {
     return response;
@@ -48,18 +71,24 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // No request config
+    if (!originalRequest) {
+      return Promise.reject(error);
+    }
+
     // Don't retry the same request twice
-    if (originalRequest?._retry) {
+    if (originalRequest._retry) {
       return Promise.reject(error);
     }
 
-    // Don't refresh if refresh endpoint itself failed
+    // Refresh endpoint itself failed
     if (originalRequest.url?.includes("/auth/refresh/")) {
+      redirectToLogin();
+
       return Promise.reject(error);
     }
 
-    // If another request is already refreshing,
-    // wait for it to finish.
+    // Another request is already refreshing
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
         failedQueue.push({
@@ -75,10 +104,8 @@ api.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      // Get CSRF token
       const csrfToken = await getCsrfToken();
 
-      // Ask Django for a new access token
       await api.post(
         "/auth/refresh/",
         {},
@@ -89,7 +116,7 @@ api.interceptors.response.use(
         }
       );
 
-      // Tell queued requests refresh succeeded
+      // Refresh succeeded
       processQueue();
 
       // Retry original request
@@ -97,6 +124,9 @@ api.interceptors.response.use(
     } catch (refreshError) {
       // Refresh failed
       processQueue(refreshError);
+
+      // User is no longer authenticated
+      redirectToLogin();
 
       return Promise.reject(refreshError);
     } finally {
