@@ -34,6 +34,7 @@ import {
 import { Post } from "@/types/post";
 import Comments from "@/components/Comments";
 import LikeButton from "@/components/LikeButton";
+import MarkdownRenderer from "@/components/MarkdownRenderer";
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -392,16 +393,13 @@ export default function PostDetailPage() {
           )}
 
           {/* Article Body */}
-          <div className="px-5 py-8 sm:px-8 sm:py-10 lg:px-10 lg:py-12">
+           <div className="mt-8">
 
-            <div className="max-w-none">
-
-              <p className="whitespace-pre-wrap break-words text-base leading-8 text-slate-700 sm:text-lg sm:leading-9">
-                {post.body}
-              </p>
+              <MarkdownRenderer
+                content={post.body}
+              />
 
             </div>
-          </div>
 
           <LikeButton
           slug={post.slug}

@@ -13,6 +13,7 @@ import {
 import { getPosts } from "@/lib/posts";
 import { Post } from "@/types/post";
 import { useAuth } from "@/components/AuthProvider";
+import MarkdownRenderer from "@/components/MarkdownRenderer";
 
 export default function HomePage() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -163,9 +164,15 @@ export default function HomePage() {
                 </Link>
 
                 {/* Post body */}
-                <p className="mt-4 line-clamp-4 break-words text-sm leading-6 text-slate-600 sm:text-base">
-                  {post.body}
-                </p>
+                <div className="mt-4 line-clamp-4 break-words text-sm leading-6 text-slate-600 sm:text-base">
+                   <div className="mt-8">
+
+                      <MarkdownRenderer
+                        content={post.body}
+                      />
+
+                    </div>
+                </div>
 
                 {/* Metadata */}
                 <div className="mt-5 flex flex-col gap-3 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">

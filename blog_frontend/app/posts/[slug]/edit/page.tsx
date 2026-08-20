@@ -24,6 +24,7 @@ import {
 
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/components/AuthProvider";
+import MarkdownEditor from "@/components/MarkdownEditor";
 
 import {
   getPost,
@@ -363,17 +364,10 @@ export default function EditPostPage() {
                   </span>
                 </div>
 
-                <textarea
-                  id="body"
-                  value={body}
-                  onChange={(event) =>
-                    setBody(event.target.value)
-                  }
-                  disabled={saving}
-                  rows={18}
-                  placeholder="Write your post here..."
-                  className="min-h-[320px] w-full resize-y rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm leading-7 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-50 sm:min-h-[420px] sm:text-base"
-                />
+                <MarkdownEditor
+                                  value={body}
+                                  onChange={setBody}
+                                />
 
                 <p className="mt-2 text-xs text-slate-400">
                   Make your changes and save when you're ready.

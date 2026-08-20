@@ -13,6 +13,7 @@ import {
 
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { createPost } from "@/lib/posts";
+import MarkdownEditor from "@/components/MarkdownEditor";
 
 export default function CreatePostPage() {
   const router = useRouter();
@@ -169,16 +170,10 @@ export default function CreatePostPage() {
                   </span>
                 </div>
 
-                <textarea
-                  id="body"
+                   {/* BODY */}
+                <MarkdownEditor
                   value={body}
-                  onChange={(event) =>
-                    setBody(event.target.value)
-                  }
-                  placeholder="Write your post here..."
-                  rows={18}
-                  className="min-h-[320px] w-full resize-y rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm leading-7 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-50 sm:min-h-[420px] sm:text-base"
-                  disabled={loading}
+                  onChange={setBody}
                 />
 
                 <p className="mt-2 text-xs text-slate-400">
