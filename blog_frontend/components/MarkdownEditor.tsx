@@ -1,16 +1,29 @@
 "use client";
 
-import { useRef, useState } from "react";
+import {
+  useRef,
+  useState,
+} from "react";
 
 import MarkdownRenderer from "@/components/MarkdownRenderer";
+
+import {
+  uploadPostImage,
+} from "@/lib/posts";
 
 
 interface MarkdownEditorProps {
   value: string;
   onChange: (value: string) => void;
+  postSlug?: string;
+  onCreateDraft?: () => Promise<string | undefined>;
 }
 
-type Mode = "edit" | "preview" | "split";
+
+type Mode =
+  | "edit"
+  | "preview"
+  | "split";
 
 
 const CODE_LANGUAGES = [
@@ -37,10 +50,16 @@ const CODE_LANGUAGES = [
 export default function MarkdownEditor({
   value,
   onChange,
+  postSlug,
+  onCreateDraft,
 }: MarkdownEditorProps) {
 
   const textareaRef =
     useRef<HTMLTextAreaElement>(null);
+
+  const imageInputRef =
+    useRef<HTMLInputElement>(null);
+
 
   const [mode, setMode] =
     useState<Mode>("split");
@@ -48,10 +67,16 @@ export default function MarkdownEditor({
   const [showLanguages, setShowLanguages] =
     useState(false);
 
+  const [uploadingImage, setUploadingImage] =
+    useState(false);
 
-  // =========================
+  const [imageError, setImageError] =
+    useState("");
+
+
+  // =====================================
   // INSERT TEXT
-  // =========================
+  // =====================================
 
   function insertText(
     before: string,
@@ -83,6 +108,7 @@ export default function MarkdownEditor({
 
     onChange(newText);
 
+
     requestAnimationFrame(() => {
 
       textarea.focus();
@@ -102,100 +128,332 @@ export default function MarkdownEditor({
   }
 
 
-  // =========================
+  // =====================================
   // INSERT BLOCK
-  // =========================
+  // =====================================
 
   function insertBlock(
-  text: string,
-  cursorOffset?: number
-) {
-  const textarea =
-    textareaRef.current;
+    text: string,
+    cursorOffset?: number
+  ) {
 
-  if (!textarea) {
+    const textarea =
+      textareaRef.current;
+
+    if (!textarea) {
+      return;
+    }
+
+    const start =
+      textarea.selectionStart;
+
+    const end =
+      textarea.selectionEnd;
+
+    const selectedText =
+      value.substring(start, end);
+
+    const insertedText =
+      text.replace(
+        "{{text}}",
+        selectedText
+      );
+
+    const newText =
+      value.substring(0, start) +
+      insertedText +
+      value.substring(end);
+
+    onChange(newText);
+
+
+    requestAnimationFrame(() => {
+
+      textarea.focus();
+
+      if (
+        cursorOffset !== undefined &&
+        selectedText.length === 0
+      ) {
+
+        const cursorPosition =
+          start + cursorOffset;
+
+        textarea.setSelectionRange(
+          cursorPosition,
+          cursorPosition
+        );
+
+      } else {
+
+        const cursorPosition =
+          start + insertedText.length;
+
+        textarea.setSelectionRange(
+          cursorPosition,
+          cursorPosition
+        );
+
+      }
+
+    });
+  }
+
+
+  // =====================================
+  // INSERT CODE BLOCK
+  // =====================================
+
+  function insertCodeBlock(
+    language: string
+  ) {
+
+    const codeBlock =
+      `\`\`\`${language}\n{{text}}\n\`\`\``;
+
+    const cursorPosition =
+      codeBlock.indexOf("{{text}}");
+
+    insertBlock(
+      codeBlock,
+      cursorPosition
+    );
+
+    setShowLanguages(false);
+  }
+
+
+  // =====================================
+  // INSERT IMAGE MARKDOWN
+  // =====================================
+
+  function insertImageMarkdown(
+    imageUrl: string,
+    fileName: string
+  ) {
+
+    const textarea =
+      textareaRef.current;
+
+    if (!textarea) {
+      return;
+    }
+
+    const start =
+      textarea.selectionStart;
+
+    const end =
+      textarea.selectionEnd;
+
+
+    const altText =
+      fileName
+        .replace(/\.[^/.]+$/, "")
+        .replace(/[-_]+/g, " ");
+
+
+    const markdown =
+      `![${altText}](${imageUrl})`;
+
+
+    const newValue =
+      value.substring(0, start) +
+      markdown +
+      value.substring(end);
+
+
+    onChange(newValue);
+
+
+    requestAnimationFrame(() => {
+
+      textarea.focus();
+
+      const cursorPosition =
+        start + markdown.length;
+
+      textarea.setSelectionRange(
+        cursorPosition,
+        cursorPosition
+      );
+
+    });
+  }
+
+
+  // =====================================
+  // IMAGE UPLOAD
+  // =====================================
+
+  async function handleImageSelect(
+  event: React.ChangeEvent<HTMLInputElement>
+) {
+  const file =
+    event.target.files?.[0];
+
+  if (!file) {
     return;
   }
 
-  const start =
-    textarea.selectionStart;
+  setImageError("");
 
-  const end =
-    textarea.selectionEnd;
+  // =====================================
+  // VALIDATE IMAGE TYPE
+  // =====================================
 
-  const selectedText =
-    value.substring(start, end);
-
-  const insertedText =
-    text.replace(
-      "{{text}}",
-      selectedText
+  if (!file.type.startsWith("image/")) {
+    setImageError(
+      "Please select a valid image file."
     );
 
-  const newText =
-    value.substring(0, start) +
-    insertedText +
-    value.substring(end);
+    event.target.value = "";
 
-  onChange(newText);
+    return;
+  }
 
-  requestAnimationFrame(() => {
-    textarea.focus();
 
-    if (cursorOffset !== undefined) {
-      const cursorPosition =
-        start + cursorOffset;
+  // =====================================
+  // VALIDATE IMAGE SIZE
+  // =====================================
 
-      textarea.setSelectionRange(
-        cursorPosition,
-        cursorPosition
-      );
-    } else {
-      const cursorPosition =
-        start + insertedText.length;
+  const maxSize =
+    5 * 1024 * 1024;
 
-      textarea.setSelectionRange(
-        cursorPosition,
-        cursorPosition
-      );
+  if (file.size > maxSize) {
+    setImageError(
+      "Image size must be less than 5 MB."
+    );
+
+    event.target.value = "";
+
+    return;
+  }
+
+
+  try {
+
+    setUploadingImage(true);
+
+
+    // =====================================
+    // GET POST SLUG
+    // =====================================
+
+    let currentSlug =
+      postSlug;
+
+
+    // =====================================
+    // CREATE DRAFT IF NECESSARY
+    // =====================================
+
+    if (!currentSlug) {
+
+      if (!onCreateDraft) {
+
+        throw new Error(
+          "Cannot create draft."
+        );
+      }
+
+
+      currentSlug =
+        await onCreateDraft();
+
+
+      if (!currentSlug) {
+
+        throw new Error(
+          "Draft was created but no slug was returned."
+        );
+      }
+
     }
-  });
+
+
+    // =====================================
+    // UPLOAD IMAGE
+    // =====================================
+
+    const data =
+      await uploadPostImage(
+        currentSlug,
+        file
+      );
+
+
+    const imageUrl =
+      data.image_url;
+
+
+    if (!imageUrl) {
+
+      throw new Error(
+        "Image URL was not returned."
+      );
+
+    }
+
+
+    // =====================================
+    // INSERT MARKDOWN
+    // =====================================
+
+    insertImageMarkdown(
+      imageUrl,
+      file.name
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "Image upload failed:",
+      error
+    );
+
+
+    setImageError(
+      error instanceof Error
+        ? error.message
+        : "Failed to upload image. Please try again."
+    );
+
+
+  } finally {
+
+    setUploadingImage(false);
+
+    event.target.value = "";
+
+  }
 }
 
+  // =====================================
+  // OPEN IMAGE PICKER
+  // =====================================
 
-  // =========================
-  // INSERT CODE BLOCK
-  // =========================
+  function handleImageButtonClick() {
 
-  function insertCodeBlock(
-  language: string
-) {
-  const codeBlock =
-    `\`\`\`${language}\n{{text}}\n\`\`\``;
+    setImageError("");
 
-  const cursorPosition =
-    codeBlock.indexOf("{{text}}");
-
-  insertBlock(
-    codeBlock,
-    cursorPosition
-  );
-
-  setShowLanguages(false);
-}
+    imageInputRef.current?.click();
+  }
 
 
   return (
 
     <div className="overflow-hidden rounded-xl border border-gray-300 bg-white">
 
-      {/* =========================
+      {/* =================================
           TOOLBAR
-      ========================= */}
+      ================================= */}
 
       <div className="flex flex-wrap items-center gap-1 border-b bg-gray-50 p-2">
 
-        {/* BOLD */}
+        {/* =================================
+            BOLD
+        ================================= */}
 
         <button
           type="button"
@@ -209,7 +467,9 @@ export default function MarkdownEditor({
         </button>
 
 
-        {/* ITALIC */}
+        {/* =================================
+            ITALIC
+        ================================= */}
 
         <button
           type="button"
@@ -223,7 +483,9 @@ export default function MarkdownEditor({
         </button>
 
 
-        {/* H1 */}
+        {/* =================================
+            H1
+        ================================= */}
 
         <button
           type="button"
@@ -237,7 +499,9 @@ export default function MarkdownEditor({
         </button>
 
 
-        {/* H2 */}
+        {/* =================================
+            H2
+        ================================= */}
 
         <button
           type="button"
@@ -251,7 +515,9 @@ export default function MarkdownEditor({
         </button>
 
 
-        {/* BULLET */}
+        {/* =================================
+            BULLET LIST
+        ================================= */}
 
         <button
           type="button"
@@ -265,7 +531,9 @@ export default function MarkdownEditor({
         </button>
 
 
-        {/* NUMBERED */}
+        {/* =================================
+            NUMBERED LIST
+        ================================= */}
 
         <button
           type="button"
@@ -279,7 +547,9 @@ export default function MarkdownEditor({
         </button>
 
 
-        {/* INLINE CODE */}
+        {/* =================================
+            INLINE CODE
+        ================================= */}
 
         <button
           type="button"
@@ -293,9 +563,9 @@ export default function MarkdownEditor({
         </button>
 
 
-        {/* =========================
-            CODE BUTTON
-        ========================= */}
+        {/* =================================
+            CODE BLOCK
+        ================================= */}
 
         <div className="relative">
 
@@ -343,7 +613,9 @@ export default function MarkdownEditor({
         </div>
 
 
-        {/* QUOTE */}
+        {/* =================================
+            QUOTE
+        ================================= */}
 
         <button
           type="button"
@@ -357,32 +629,68 @@ export default function MarkdownEditor({
         </button>
 
 
-        {/* EQUATION */}
+        {/* =================================
+            EQUATION
+        ================================= */}
 
         <button
-  type="button"
-  onClick={() => {
-    const equation =
-      "$$\n{{text}}\n$$";
+          type="button"
+          onClick={() => {
 
-    insertBlock(
-      equation,
-      equation.indexOf("{{text}}")
-    );
-  }}
-  title="Equation"
-  className="rounded px-3 py-2 hover:bg-gray-200"
->
-  Σ
-</button>
+            const equation =
+              "$$\n{{text}}\n$$";
+
+            insertBlock(
+              equation,
+              equation.indexOf(
+                "{{text}}"
+              )
+            );
+
+          }}
+          title="Equation"
+          className="rounded px-3 py-2 hover:bg-gray-200"
+        >
+          Σ
+        </button>
+
+
+        {/* =================================
+            IMAGE
+        ================================= */}
+
+        <button
+            type="button"
+            onClick={handleImageButtonClick}
+            disabled={uploadingImage}
+            title="Insert image"
+            className="rounded px-3 py-2 hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {uploadingImage
+              ? "Uploading..."
+              : "Image"}
+          </button>
+
+
+        {/* =================================
+            ERROR MESSAGE
+        ================================= */}
+
+        {imageError && (
+
+          <span className="ml-2 text-xs font-medium text-red-600">
+            {imageError}
+          </span>
+
+        )}
 
 
         <div className="hidden flex-1 sm:block" />
 
 
-        {/* =========================
+        {/* =================================
             VIEW MODE
-        ========================= */}
+        ================================= */}
 
         <div className="flex overflow-hidden rounded-lg border bg-white">
 
@@ -400,6 +708,7 @@ export default function MarkdownEditor({
             Edit
           </button>
 
+
           <button
             type="button"
             onClick={() =>
@@ -413,6 +722,7 @@ export default function MarkdownEditor({
           >
             Split
           </button>
+
 
           <button
             type="button"
@@ -433,9 +743,22 @@ export default function MarkdownEditor({
       </div>
 
 
-      {/* =========================
+      {/* =================================
+          HIDDEN IMAGE INPUT
+      ================================= */}
+
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleImageSelect}
+      />
+
+
+      {/* =================================
           EDITOR / PREVIEW
-      ========================= */}
+      ================================= */}
 
       <div
         className={
@@ -445,7 +768,9 @@ export default function MarkdownEditor({
         }
       >
 
-        {/* EDIT */}
+        {/* =================================
+            EDITOR
+        ================================= */}
 
         {(mode === "edit" ||
           mode === "split") && (
@@ -459,6 +784,7 @@ export default function MarkdownEditor({
               </div>
 
             )}
+
 
             <textarea
               ref={textareaRef}
@@ -477,7 +803,9 @@ export default function MarkdownEditor({
         )}
 
 
-        {/* PREVIEW */}
+        {/* =================================
+            PREVIEW
+        ================================= */}
 
         {(mode === "preview" ||
           mode === "split") && (
@@ -491,6 +819,7 @@ export default function MarkdownEditor({
               </div>
 
             )}
+
 
             <div className="min-h-[500px] overflow-y-auto p-5">
 

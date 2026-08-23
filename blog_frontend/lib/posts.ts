@@ -214,3 +214,23 @@ export async function unlikePost(
 
   return response.data;
 }
+
+// Image upload
+export async function uploadPostImage(
+  slug: string,
+  file: File
+) {
+  const formData = new FormData();
+
+  formData.append(
+    "image",
+    file
+  );
+
+  const response = await api.post(
+    `/blog/posts/${slug}/upload-image/`,
+    formData
+  );
+
+  return response.data;
+}

@@ -52,6 +52,8 @@ export default function EditPostPage() {
 
   const { user } = useAuth();
 
+  
+
   // =========================
   // LOAD POST
   // =========================
@@ -367,6 +369,7 @@ export default function EditPostPage() {
                 <MarkdownEditor
                                   value={body}
                                   onChange={setBody}
+                                  postSlug={slug}
                                 />
 
                 <p className="mt-2 text-xs text-slate-400">
