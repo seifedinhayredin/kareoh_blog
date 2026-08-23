@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 
-from .models import Post, Comment,Like, PostImage
+from .models import Post, Comment,Like, PostImage, PostShare
 
 
 User = get_user_model()
@@ -33,6 +33,13 @@ class PostSerializer(serializers.ModelSerializer):
 
     is_liked = serializers.SerializerMethodField()
 
+    share_count = serializers.IntegerField(
+        source="shares.count",
+        read_only=True
+    )
+
+    has_shared = serializers.SerializerMethodField()
+
     class Meta:
         model = Post
 
@@ -48,6 +55,8 @@ class PostSerializer(serializers.ModelSerializer):
             "status",
             "like_count",
             "is_liked",
+            "share_count",
+            "has_shared",
         ]
 
         read_only_fields = [
@@ -58,6 +67,8 @@ class PostSerializer(serializers.ModelSerializer):
             "updated",
             "like_count",
             "is_liked",
+            "share_count",
+            "has_shared",
         ]
 
     def get_is_liked(self, obj):
@@ -73,6 +84,23 @@ class PostSerializer(serializers.ModelSerializer):
             return False
 
         return Like.objects.filter(
+            post=obj,
+            user=request.user
+        ).exists()
+    
+    def get_has_shared(self, obj):
+
+        request = self.context.get(
+            "request"
+        )
+
+        if not request:
+            return False
+
+        if not request.user.is_authenticated:
+            return False
+
+        return PostShare.objects.filter(
             post=obj,
             user=request.user
         ).exists()

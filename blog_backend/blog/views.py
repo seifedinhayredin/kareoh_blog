@@ -5,7 +5,7 @@ from rest_framework.viewsets import ModelViewSet
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 
-from .models import Post, Comment, Like,PostImage
+from .models import Post, Comment, Like,PostImage, PostShare
 from .utils import generate_unique_slug
 
 from .permissions import (
@@ -15,7 +15,8 @@ from .permissions import (
 from .serializers import (
     PostSerializer,
     CommentSerializer,
-    PostImageSerializer
+    PostImageSerializer,
+    
 )
 
 
@@ -321,4 +322,35 @@ class PostViewSet(ModelViewSet):
         return Response(
             serializer.data,
             status=status.HTTP_201_CREATED,
+        )
+    #For sharing a post
+    @action(
+    detail=True,
+    methods=["post"],
+    permission_classes=[IsAuthenticated],
+    )
+    def share(self, request, slug=None):
+
+        post = self.get_object()
+
+        share, created = PostShare.objects.get_or_create(
+            post=post,
+            user=request.user,
+        )
+
+        return Response(
+            {
+                "message": (
+                    "Post shared successfully."
+                    if created
+                    else "You have already shared this post."
+                ),
+                "share_count": post.shares.count(),
+                "has_shared": True,
+            },
+            status=(
+                status.HTTP_201_CREATED
+                if created
+                else status.HTTP_200_OK
+            ),
         )
