@@ -234,3 +234,23 @@ export async function uploadPostImage(
 
   return response.data;
 }
+
+// Share post
+
+// your existing interfaces and functions...
+
+export interface SharePostResponse {
+  message: string;
+  share_count: number;
+  has_shared: boolean;
+}
+
+export async function sharePost(
+  slug: string
+): Promise<SharePostResponse> {
+  const response = await api.post<SharePostResponse>(
+    `/blog/posts/${slug}/share/`
+  );
+
+  return response.data;
+}

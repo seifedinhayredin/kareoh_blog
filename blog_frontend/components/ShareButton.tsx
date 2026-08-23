@@ -9,9 +9,14 @@ import {
   X,
 } from "lucide-react";
 
+import { sharePost } from "@/lib/posts";
+
 interface ShareButtonProps {
   title: string;
   slug: string;
+  initialShareCount: number;
+  initialHasShared: boolean;
+  isAuthenticated: boolean;
 }
 
 /* =========================
@@ -90,11 +95,21 @@ function LinkedInIcon() {
 export default function ShareButton({
   title,
   slug,
+  initialShareCount,
+  initialHasShared,
+  isAuthenticated,
 }: ShareButtonProps) {
-  const [isOpen, setIsOpen] =
-    useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
-  const [copied, setCopied] =
+  const [copied, setCopied] = useState(false);
+
+  const [shareCount, setShareCount] =
+    useState(initialShareCount);
+
+  const [hasShared, setHasShared] =
+    useState(initialHasShared);
+
+  const [isSharing, setIsSharing] =
     useState(false);
 
   const menuRef =
@@ -106,6 +121,36 @@ export default function ShareButton({
 
   function getPostUrl() {
     return `${window.location.origin}/posts/${slug}`;
+  }
+
+  /* =========================
+     RECORD SHARE
+  ========================= */
+
+  async function recordShare() {
+    /*
+     * Only authenticated users can be
+     * counted as unique sharers.
+     */
+    if (!isAuthenticated || isSharing) {
+      return;
+    }
+
+    try {
+      setIsSharing(true);
+
+      const data = await sharePost(slug);
+
+      setShareCount(data.share_count);
+      setHasShared(data.has_shared);
+    } catch (error) {
+      console.error(
+        "Failed to record share:",
+        error
+      );
+    } finally {
+      setIsSharing(false);
+    }
   }
 
   /* =========================
@@ -173,11 +218,15 @@ export default function ShareButton({
     try {
       const url = getPostUrl();
 
-      await navigator.clipboard.writeText(
-        url
-      );
+      await navigator.clipboard.writeText(url);
 
       setCopied(true);
+
+      /*
+       * Record the share after the
+       * copy operation succeeds.
+       */
+      await recordShare();
 
       setTimeout(() => {
         setCopied(false);
@@ -208,6 +257,12 @@ export default function ShareButton({
         url,
       });
 
+      /*
+       * The native share completed
+       * without being cancelled.
+       */
+      await recordShare();
+
       setIsOpen(false);
     } catch (error) {
       if (
@@ -228,7 +283,7 @@ export default function ShareButton({
      WHATSAPP
   ========================= */
 
-  function shareOnWhatsApp() {
+  async function shareOnWhatsApp() {
     const url = getPostUrl();
 
     const message = encodeURIComponent(
@@ -241,6 +296,8 @@ export default function ShareButton({
       "noopener,noreferrer"
     );
 
+    await recordShare();
+
     setIsOpen(false);
   }
 
@@ -248,7 +305,7 @@ export default function ShareButton({
      TELEGRAM
   ========================= */
 
-  function shareOnTelegram() {
+  async function shareOnTelegram() {
     const url = getPostUrl();
 
     const text =
@@ -263,6 +320,8 @@ export default function ShareButton({
       "noopener,noreferrer"
     );
 
+    await recordShare();
+
     setIsOpen(false);
   }
 
@@ -270,7 +329,7 @@ export default function ShareButton({
      FACEBOOK
   ========================= */
 
-  function shareOnFacebook() {
+  async function shareOnFacebook() {
     const url = getPostUrl();
 
     const encodedUrl =
@@ -282,6 +341,8 @@ export default function ShareButton({
       "noopener,noreferrer"
     );
 
+    await recordShare();
+
     setIsOpen(false);
   }
 
@@ -289,7 +350,7 @@ export default function ShareButton({
      X / TWITTER
   ========================= */
 
-  function shareOnX() {
+  async function shareOnX() {
     const url = getPostUrl();
 
     const text =
@@ -304,6 +365,8 @@ export default function ShareButton({
       "noopener,noreferrer"
     );
 
+    await recordShare();
+
     setIsOpen(false);
   }
 
@@ -311,7 +374,7 @@ export default function ShareButton({
      LINKEDIN
   ========================= */
 
-  function shareOnLinkedIn() {
+  async function shareOnLinkedIn() {
     const url = getPostUrl();
 
     const encodedUrl =
@@ -322,6 +385,8 @@ export default function ShareButton({
       "_blank",
       "noopener,noreferrer"
     );
+
+    await recordShare();
 
     setIsOpen(false);
   }
@@ -345,11 +410,27 @@ export default function ShareButton({
         }
         aria-expanded={isOpen}
         aria-haspopup="menu"
-        className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-100"
+        className={`inline-flex h-11 items-center justify-center gap-2 rounded-lg border px-5 text-sm font-semibold shadow-sm transition focus:outline-none focus:ring-4 ${
+          hasShared
+            ? "border-blue-200 bg-blue-50 text-blue-600 focus:ring-blue-100"
+            : "border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600 focus:ring-blue-100"
+        }`}
       >
         <Share2 className="h-4 w-4" />
 
-        Share
+        <span>
+          {hasShared ? "Shared" : "Share"}
+        </span>
+
+        <span
+          className={`min-w-[24px] rounded-full px-1.5 py-0.5 text-center text-xs font-bold ${
+            hasShared
+              ? "bg-blue-100 text-blue-700"
+              : "bg-slate-100 text-slate-600"
+          }`}
+        >
+          {shareCount}
+        </span>
       </button>
 
       {/* Share Menu */}
@@ -391,7 +472,8 @@ export default function ShareButton({
               type="button"
               role="menuitem"
               onClick={shareOnWhatsApp}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-green-50 hover:text-green-700"
+              disabled={isSharing}
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-green-50 hover:text-green-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-green-100 text-green-700">
                 <WhatsAppIcon />
@@ -405,7 +487,8 @@ export default function ShareButton({
               type="button"
               role="menuitem"
               onClick={shareOnTelegram}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-sky-50 hover:text-sky-700"
+              disabled={isSharing}
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-sky-50 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sky-700">
                 <TelegramIcon />
@@ -419,7 +502,8 @@ export default function ShareButton({
               type="button"
               role="menuitem"
               onClick={shareOnFacebook}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-blue-50 hover:text-blue-700"
+              disabled={isSharing}
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-700">
                 <FacebookIcon />
@@ -433,7 +517,8 @@ export default function ShareButton({
               type="button"
               role="menuitem"
               onClick={shareOnX}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-900"
+              disabled={isSharing}
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-900">
                 <XSocialIcon />
@@ -447,7 +532,8 @@ export default function ShareButton({
               type="button"
               role="menuitem"
               onClick={shareOnLinkedIn}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-blue-50 hover:text-blue-700"
+              disabled={isSharing}
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-700">
                 <LinkedInIcon />
@@ -461,7 +547,8 @@ export default function ShareButton({
               type="button"
               role="menuitem"
               onClick={handleCopyLink}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-900"
+              disabled={isSharing}
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
                 {copied ? (
@@ -490,7 +577,8 @@ export default function ShareButton({
                   onClick={
                     handleNativeShare
                   }
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-blue-50 hover:text-blue-700"
+                  disabled={isSharing}
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
                     <Share2 className="h-4 w-4" />
@@ -509,6 +597,19 @@ export default function ShareButton({
                 </button>
               </>
             )}
+
+          {/* Share Count */}
+          <div className="mt-2 border-t border-slate-100 px-3 py-2 text-center">
+            <p className="text-xs text-slate-500">
+              Shared by{" "}
+              <span className="font-semibold text-slate-700">
+                {shareCount}
+              </span>{" "}
+              {shareCount === 1
+                ? "user"
+                : "users"}
+            </p>
+          </div>
         </div>
       )}
     </div>

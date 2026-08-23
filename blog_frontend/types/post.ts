@@ -16,6 +16,9 @@ export interface Post {
 
    like_count: number;
   is_liked: boolean;
+
+  share_count: number;
+  has_shared: boolean;
 }
 
 export interface CreatePostData {

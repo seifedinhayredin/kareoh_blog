@@ -414,6 +414,9 @@ export default function PostDetailPage() {
           <ShareButton
             title={post.title}
             slug={post.slug}
+            initialShareCount={post.share_count}
+            initialHasShared={post.has_shared}
+            isAuthenticated={!!user}
           />
         </div>
         
