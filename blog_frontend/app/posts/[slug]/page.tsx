@@ -35,6 +35,7 @@ import { Post } from "@/types/post";
 import Comments from "@/components/Comments";
 import LikeButton from "@/components/LikeButton";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
+import ShareButton from "@/components/ShareButton";
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -401,12 +402,21 @@ export default function PostDetailPage() {
 
             </div>
 
+          {/* Post Actions */}
+        <div className="mt-10 flex flex-col gap-4 border-t border-slate-100 px-5 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-10">
           <LikeButton
-          slug={post.slug}
-          initialLikeCount={post.like_count}
-          initialIsLiked={post.is_liked}
-          isAuthenticated={!!user}
-        />
+            slug={post.slug}
+            initialLikeCount={post.like_count}
+            initialIsLiked={post.is_liked}
+            isAuthenticated={!!user}
+          />
+
+          <ShareButton
+            title={post.title}
+            slug={post.slug}
+          />
+        </div>
+        
         </article>
 
         {/* Comments */}
