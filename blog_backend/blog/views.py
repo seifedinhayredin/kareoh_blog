@@ -3,8 +3,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from django.shortcuts import get_object_or_404
+from rest_framework import status
 
-from .models import Post, Comment, Like
+from .models import Post, Comment, Like,PostImage
 from .utils import generate_unique_slug
 
 from .permissions import (
@@ -14,6 +15,7 @@ from .permissions import (
 from .serializers import (
     PostSerializer,
     CommentSerializer,
+    PostImageSerializer
 )
 
 
@@ -269,4 +271,54 @@ class PostViewSet(ModelViewSet):
                 ).count(),
             },
             status=200
+        )
+
+    #For image upload
+    @action(
+    detail=True,
+    methods=["post"],
+    url_path="upload-image",
+    permission_classes=[IsAuthenticated],
+    )
+    def upload_image(self, request, slug=None):
+
+        post = self.get_object()
+
+        # Only the post owner can upload images
+        if post.author != request.user:
+            return Response(
+                {
+                    "detail": (
+                        "You do not have permission "
+                        "to upload images to this post."
+                    )
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        image = request.FILES.get("image")
+
+        if not image:
+            return Response(
+                {
+                    "detail": "No image was provided."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        post_image = PostImage.objects.create(
+            post=post,
+            image=image,
+        )
+
+        serializer = PostImageSerializer(
+            post_image,
+            context={
+                "request": request
+            }
+        )
+
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
         )

@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 
-from .models import Post, Comment,Like
+from .models import Post, Comment,Like, PostImage
 
 
 User = get_user_model()
@@ -104,3 +104,40 @@ class CommentSerializer(serializers.ModelSerializer):
             "updated",
             "active",
         ]
+
+
+
+
+class PostImageSerializer(serializers.ModelSerializer):
+
+    image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PostImage
+
+        fields = [
+            "id",
+            "image",
+            "image_url",
+            "uploaded_at",
+        ]
+
+        read_only_fields = [
+            "id",
+            "image_url",
+            "uploaded_at",
+        ]
+
+    def get_image_url(self, obj):
+
+        request = self.context.get("request")
+
+        if obj.image and request:
+            return request.build_absolute_uri(
+                obj.image.url
+            )
+
+        if obj.image:
+            return obj.image.url
+
+        return None
