@@ -106,3 +106,27 @@ export async function logout() {
 
   return response.data;
 }
+
+export interface ChangePasswordData {
+  current_password: string;
+  new_password: string;
+}
+
+export async function changePassword(
+  data: ChangePasswordData
+) {
+  
+  const csrfToken = await getCsrfToken();
+
+  const response = await api.patch(
+    "/auth/change-password/",
+    data,
+    {
+      headers: {
+        "X-CSRFToken": csrfToken,
+      },
+    }
+  );
+
+  return response.data;
+}
