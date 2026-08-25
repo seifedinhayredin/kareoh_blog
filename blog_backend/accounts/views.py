@@ -14,7 +14,7 @@ from django.views.decorators.csrf import csrf_protect
 
 
 from .models import User
-from .serializers import UserSerializer, LoginSerializer
+from .serializers import UserSerializer, LoginSerializer,ChangePasswordSerializer
 
 @method_decorator(csrf_protect, name="dispatch")
 class RegisterAPIView(generics.CreateAPIView):
@@ -174,6 +174,59 @@ class CSRFTokenAPIView(APIView):
             value=csrf_token,
             httponly=False,
             secure=False,
+            samesite="Lax",
+        )
+
+        return response
+
+@method_decorator(csrf_protect, name="dispatch")
+class ChangePasswordAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request):
+        serializer = ChangePasswordSerializer(
+            data=request.data,
+            context={"request": request},
+        )
+
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
+
+        # Change the password using Django's password hashing
+        user.set_password(
+            serializer.validated_data["new_password"]
+        )
+
+        user.save(
+            update_fields=["password"]
+        )
+
+        # Invalidate the current refresh token
+        refresh_token = request.COOKIES.get("refresh_token")
+
+        if refresh_token:
+            try:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+            except TokenError:
+                pass
+
+        # Remove authentication cookies
+        response = Response({
+            "message": (
+                "Password updated successfully. "
+                "Please log in again."
+            )
+        })
+
+        response.delete_cookie(
+            "access_token",
+            samesite="Lax",
+        )
+
+        response.delete_cookie(
+            "refresh_token",
             samesite="Lax",
         )
 

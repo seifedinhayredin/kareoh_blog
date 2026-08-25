@@ -4,9 +4,11 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from django.shortcuts import get_object_or_404
 from rest_framework import status
+from rest_framework.views import APIView
 
-from .models import Post, Comment, Like,PostImage, PostShare
+from .models import Post, Comment, Like,PostImage, PostShare,Profile
 from .utils import generate_unique_slug
+
 
 from .permissions import (
     IsAuthorOrReadOnly,
@@ -16,6 +18,7 @@ from .serializers import (
     PostSerializer,
     CommentSerializer,
     PostImageSerializer,
+    ProfileSerializer,
     
 )
 
@@ -353,4 +356,48 @@ class PostViewSet(ModelViewSet):
                 if created
                 else status.HTTP_200_OK
             ),
+        )
+
+
+
+class ProfileView(APIView):
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def get(self, request):
+
+        profile, created = Profile.objects.get_or_create(
+            user=request.user
+        )
+
+        serializer = ProfileSerializer(
+            profile
+        )
+
+        return Response(
+            serializer.data
+        )
+
+    def patch(self, request):
+
+        profile, created = Profile.objects.get_or_create(
+            user=request.user
+        )
+
+        serializer = ProfileSerializer(
+            profile,
+            data=request.data,
+            partial=True
+        )
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+        serializer.save()
+
+        return Response(
+            serializer.data
         )

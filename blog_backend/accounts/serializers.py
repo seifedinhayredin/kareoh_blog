@@ -71,3 +71,39 @@ class LoginSerializer(serializers.Serializer):
         attrs["user"] = user
 
         return attrs
+    
+class ChangePasswordSerializer(serializers.Serializer):
+    current_password = serializers.CharField(
+        write_only=True,
+        style={"input_type": "password"},
+    )
+
+    new_password = serializers.CharField(
+        write_only=True,
+        min_length=8,
+        style={"input_type": "password"},
+    )
+
+    def validate_current_password(self, value):
+        user = self.context["request"].user
+
+        if not user.check_password(value):
+            raise serializers.ValidationError(
+                "Current password is incorrect."
+            )
+
+        return value
+
+    def validate(self, attrs):
+        current_password = attrs["current_password"]
+        new_password = attrs["new_password"]
+
+        if current_password == new_password:
+            raise serializers.ValidationError({
+                "new_password": (
+                    "New password must be different from "
+                    "your current password."
+                )
+            })
+
+        return attrs   

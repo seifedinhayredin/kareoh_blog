@@ -157,3 +157,31 @@ class PostShare(models.Model):
 
     def __str__(self):
         return f"{self.user} shared {self.post.title}"
+
+#User Profile 
+class Profile(models.Model):
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="profile",
+    )
+
+    bio = models.TextField(
+        blank=True,
+        default="I am a passionate blogger who loves to share my thoughts and experiences with the world.",
+    )
+
+    profession = models.CharField(
+        max_length=150,
+        blank=True,
+        default="",
+    )
+
+    education = models.TextField(
+        blank=True,
+        default="",
+    )
+
+    def __str__(self):
+        return f"{self.user.username}'s Profile"

@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 
-from .models import Post, Comment,Like, PostImage, PostShare
+from .models import Post, Comment,Like, PostImage, PostShare, Profile
 
 
 User = get_user_model()
@@ -169,3 +169,20 @@ class PostImageSerializer(serializers.ModelSerializer):
             return obj.image.url
 
         return None
+
+
+
+
+class ProfileSerializer(
+    serializers.ModelSerializer
+):
+
+    class Meta:
+
+        model = Profile
+
+        fields = [
+            "bio",
+            "profession",
+            "education",
+        ]
