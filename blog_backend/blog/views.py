@@ -5,6 +5,7 @@ from rest_framework.viewsets import ModelViewSet
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.filters import SearchFilter
 
 from .models import Post, Comment, Like,PostImage, PostShare,Profile
 from .utils import generate_unique_slug
@@ -32,6 +33,15 @@ class PostViewSet(ModelViewSet):
     ]
 
     lookup_field = "slug"
+
+    filter_backends = [
+        SearchFilter
+    ]
+
+    search_fields = [
+        "title",
+        "body",
+    ]
 
     def get_queryset(self):
 
