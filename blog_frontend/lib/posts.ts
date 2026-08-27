@@ -13,12 +13,27 @@ import {
 // =========================
 
 export async function getPosts(
-  page: number = 1
+  page: number = 1,
+  search: string = ""
 ): Promise<PaginatedPosts> {
+
+  const params = new URLSearchParams();
+
+  params.set(
+    "page",
+    page.toString()
+  );
+
+  if (search.trim()) {
+    params.set(
+      "search",
+      search.trim()
+    );
+  }
 
   const response =
     await api.get<PaginatedPosts>(
-      `/blog/posts/?page=${page}`
+      `/blog/posts/?${params.toString()}`
     );
 
   return response.data;
