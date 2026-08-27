@@ -5,19 +5,32 @@ import {
   Post,
   CreatePostData,
   Comment,
+  PaginatedPosts,
 } from "@/types/post";
 
 // =========================
 // GET ALL POSTS
 // =========================
 
-export async function getPosts(): Promise<Post[]> {
+export async function getPosts(
+  page: number = 1
+): Promise<PaginatedPosts> {
+
+  const response =
+    await api.get<PaginatedPosts>(
+      `/blog/posts/?page=${page}`
+    );
+
+  return response.data;
+}
+
+/*export async function getPosts(): Promise<Post[]> {
   const response = await api.get<Post[]>(
     "/blog/posts/"
   );
 
   return response.data;
-}
+}*/
 
 // =========================
 // GET SINGLE POST

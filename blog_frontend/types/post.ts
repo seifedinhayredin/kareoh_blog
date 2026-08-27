@@ -42,3 +42,10 @@ export interface Comment {
   updated: string;
   active: boolean;
 }
+
+export interface PaginatedPosts {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Post[];
+}
