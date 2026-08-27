@@ -106,4 +106,32 @@ class ChangePasswordSerializer(serializers.Serializer):
                 )
             })
 
-        return attrs   
+        return attrs  
+
+class PublicAuthorSerializer(serializers.ModelSerializer):
+    bio = serializers.CharField(
+        source="profile.bio",
+        read_only=True,
+    )
+
+    profession = serializers.CharField(
+        source="profile.profession",
+        read_only=True,
+    )
+
+    education = serializers.CharField(
+        source="profile.education",
+        read_only=True,
+    )
+
+    class Meta:
+        model = User
+        fields = (
+            "username",
+            "first_name",
+            "last_name",
+            "bio",
+            "profession",
+            "education",
+        )
+        read_only_fields = fields 

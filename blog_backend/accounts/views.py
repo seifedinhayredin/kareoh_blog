@@ -14,7 +14,7 @@ from django.views.decorators.csrf import csrf_protect
 
 
 from .models import User
-from .serializers import UserSerializer, LoginSerializer,ChangePasswordSerializer
+from .serializers import UserSerializer, LoginSerializer,ChangePasswordSerializer, PublicAuthorSerializer
 
 @method_decorator(csrf_protect, name="dispatch")
 class RegisterAPIView(generics.CreateAPIView):
@@ -231,3 +231,23 @@ class ChangePasswordAPIView(APIView):
         )
 
         return response
+
+class PublicAuthorAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, username):
+        try:
+            user = User.objects.select_related("profile").get(
+                username=username
+            )
+        except User.DoesNotExist:
+            return Response(
+                {
+                    "detail": "Author not found."
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = PublicAuthorSerializer(user)
+
+        return Response(serializer.data)
