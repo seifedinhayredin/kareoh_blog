@@ -503,13 +503,15 @@ export default function PostDetailPage() {
                       Written by
                     </p>
 
-                    <p className="break-words text-sm font-semibold text-slate-700">
-
-                      {post.author.first_name}{" "}
-
-                      {post.author.last_name}
-
-                    </p>
+                    <Link
+  href={`/authors/${encodeURIComponent(
+    post.author.username
+  )}`}
+  className="font-medium text-blue-600 transition hover:text-blue-700 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
+>
+  {post.author.first_name}{" "}
+  {post.author.last_name}
+</Link>
 
                   </div>
 
